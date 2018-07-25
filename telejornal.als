@@ -1,56 +1,61 @@
 module telejornal
 
-abstract sig Telejornal {
-	apresentadores: one Apresentador,
-	reporteresApresentadores: set ReporteresApresentadores
+one abstract sig Telejornal {
+	reporteres: one ReporteresApresentadores,
+	redacao: one Redacao
 }
-sig TeleJornalManha extends Telejornal {}
-sig TeleJornalTarde extends Telejornal {}
-sig TeleJornalNoite extends Telejornal {}
+sig TelejornalManha extends Telejornal {
+	apresentador: one ApresentadorManha
+}
+sig TelejornalTarde extends Telejornal {
+	apresentador: one ApresentadorPermutado
+}
+sig TelejornalNoite extends Telejornal {
+	apresentador: one ApresentadorPermutado
+}
 
-abstract sig Apresentador {
+one abstract sig Apresentador {
 	roteiro: one Roteiro
 }
 sig ApresentadorManha extends Apresentador {}
-sig ApresentadorTarde extends Apresentador {}
-sig ApresentadorNoite extends Apresentador {}
 
-sig Redacao {
+abstract sig ApresentadorPermutado extends Apresentador {}
+sig ApresentadorTarde extends ApresentadorPermutado {}
+sig ApresentadorNoite extends ApresentadorPermutado {}
+
+one sig Redacao {
 	roteiro: one Roteiro,
 	equipe: one EquipeReporteres
 }
 
-sig Roteiro {
+one sig Roteiro {
 	noticias: set Noticia
 }
 
 sig Reporter {}
 
-sig EquipeReporteres {
+one sig EquipeReporteres {
 	reporteres: set Reporter
 }
 
-sig ReporteresApresentadores {
-	reporteresApresentadores: set Reporter
+one sig ReporteresApresentadores {
+	reporteres: set Reporter
 }
 
 abstract sig Noticia {}
-sig Entretenimento extends Noticia {}
-sig Saude extends Noticia {}
-sig Educacao extends Noticia {}
-sig Politica extends Noticia {}
-sig Violencia extends Noticia {}
-sig Esporte extends Noticia {}
+some sig Entretenimento extends Noticia {}
+some sig Saude extends Noticia {}
+some sig Educacao extends Noticia {}
+some sig Politica extends Noticia {}
+some sig Violencia extends Noticia {}
+some sig Esporte extends Noticia {}
 
-//setup para modelo de 1 telejornal
+-- predicados
+
+//regras de integridade
 pred setup {
-	#Telejornal = 1
-	#Apresentador = 1
-	#Redacao = 1
-	#Roteiro = 1
 	#Reporter = 10
-	#EquipeReporteres = 1
-	#ReporteresApresentadores = 1
+	#Noticia <= 10
 }
 
 //roteiros nao podem ter mais de 3 noticias de uma mesma categoria
@@ -64,36 +69,60 @@ pred max_roteiro_por_categoria {
 }
 
 -- funcoes
-fun get_apresentadores_telejornal[t: Telejornal]: one Apresentador {
-	t.apresentadores
+fun get_apresentadores_telejornal[t:Telejornal]: set ReporteresApresentadores {
+	t.reporteres
 }
 
-fun get_reporteres_telejornal[t: Telejornal]: set ReporteresApresentadores {
-	t.reporteresApresentadores
+fun get_reporteres_apresentadores[e:EquipeReporteres]: set Reporter {
+	e.reporteres
+}
+
+fun get_noticias_roteiro[r:Roteiro]: set Noticia {
+	r.noticias
+}
+
+-- predicados
+pred reporter_apresentador {
+	#ReporteresApresentadores.reporteres = 4
+}
+
+pred equipe_reporteres {
+	all e:EquipeReporteres | #get_reporteres_apresentadores[e] = 10
+}
+
+pred noticias_em_roteiro {
+	all r:Roteiro | #get_noticias_roteiro[r] = 10
+}
+
+pred instancias_noticias_em_roteiro {
+	all n:Noticia, r:Roteiro | n in get_noticias_roteiro[r]
 }
 
 -- fatos
-fact{
+fact {
 	setup
 	max_roteiro_por_categoria
-
-
-	all t:Telejornal | #(t.apresentadores) = 1
-	all t:Telejornal | #(t.reporteresApresentadores) = 1
-
-	all p:ReporteresApresentadores | #(p.reporteresApresentadores) = 4
-
-	all e:EquipeReporteres | #(e.reporteres) = 10
-	
-	all r:Roteiro | #(r.noticias) = 10
+	reporter_apresentador
+	equipe_reporteres
+	instancias_noticias_em_roteiro
 }
 
 -- tests
-assert modeloDeTeste {
-	all t:TeleJornalManha | t.apresentadores = ApresentadorManha
+assert teste_reporteres_apresentadores {
+	all e:EquipeReporteres | #(e.reporteres) = 10
 }
 
-check modeloDeTeste
+assert teste_numero_noticias {
+	all r:Roteiro | #(r.noticias) = 10
+}
+
+assert teste_noticias_dentro_do_roteiro {
+	lone n:Noticia, r:Roteiro | n in get_noticias_roteiro[r]
+}
+
+check teste_reporteres_apresentadores
+check teste_numero_noticias
+check teste_noticias_dentro_do_roteiro
 
 -- run
 pred show[]{}
