@@ -117,7 +117,7 @@ assert teste_numero_noticias {
 }
 
 assert teste_noticias_dentro_do_roteiro {
-	lone n:Noticia, r:Roteiro | n in get_noticias_roteiro[r]
+	all n:Noticia, r:Roteiro | n in get_noticias_roteiro[r]
 }
 
 check teste_reporteres_da_equipe
