@@ -73,7 +73,7 @@ fun get_apresentadores_telejornal[t:Telejornal]: set ReporteresApresentadores {
 	t.reporteres
 }
 
-fun get_reporteres_apresentadores[e:EquipeReporteres]: set Reporter {
+fun get_reporteres_da_equipe[e:EquipeReporteres]: set Reporter {
 	e.reporteres
 }
 
@@ -87,7 +87,7 @@ pred reporter_apresentador {
 }
 
 pred equipe_reporteres {
-	all e:EquipeReporteres | #get_reporteres_apresentadores[e] = 10
+	all e:EquipeReporteres | #get_reporteres_da_equipe[e] = 10
 }
 
 pred noticias_em_roteiro {
@@ -108,7 +108,7 @@ fact {
 }
 
 -- tests
-assert teste_reporteres_apresentadores {
+assert teste_reporteres_da_equipe {
 	all e:EquipeReporteres | #(e.reporteres) = 10
 }
 
@@ -120,7 +120,7 @@ assert teste_noticias_dentro_do_roteiro {
 	lone n:Noticia, r:Roteiro | n in get_noticias_roteiro[r]
 }
 
-check teste_reporteres_apresentadores
+check teste_reporteres_da_equipe
 check teste_numero_noticias
 check teste_noticias_dentro_do_roteiro
 
